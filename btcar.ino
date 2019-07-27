@@ -9,7 +9,6 @@
 
 #define MIN_SPEED 96
 #define MAX_SPEED 255
-#define SPEED_DEC 32
 
 #include <SoftwareSerial.h>
 SoftwareSerial bt(BT_RX_PIN, BT_TX_PIN);
@@ -29,7 +28,7 @@ void setup() {
 }
 
 volatile byte _spd = MIN_SPEED;
-volatile byte _spdc = 0;
+volatile byte _spdc = 6;
 
 char btcmd;
 
@@ -125,7 +124,7 @@ void goForwardRight(byte mspd) {
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
   analogWrite(ENA_PIN, mspd);
-  analogWrite(ENB_PIN, mspd - SPEED_DEC);
+  analogWrite(ENB_PIN, 0);
 }
 
 void goForwardLeft(byte mspd) {
@@ -133,7 +132,7 @@ void goForwardLeft(byte mspd) {
   digitalWrite(IN2_PIN, HIGH);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
-  analogWrite(ENA_PIN, mspd - SPEED_DEC);
+  analogWrite(ENA_PIN, 0);
   analogWrite(ENB_PIN, mspd);
 }
 
@@ -152,7 +151,7 @@ void goBackwardRight(byte mspd) {
   digitalWrite(IN3_PIN, HIGH);
   digitalWrite(IN4_PIN, LOW);
   analogWrite(ENA_PIN, mspd);
-  analogWrite(ENB_PIN, mspd - SPEED_DEC);
+  analogWrite(ENB_PIN, 0);
 }
 
 void goBackwardLeft(byte mspd) {
@@ -160,7 +159,7 @@ void goBackwardLeft(byte mspd) {
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, HIGH);
   digitalWrite(IN4_PIN, LOW);
-  analogWrite(ENA_PIN, mspd - SPEED_DEC);
+  analogWrite(ENA_PIN, 0);
   analogWrite(ENB_PIN, mspd);
 }
 
@@ -192,6 +191,10 @@ void fullStop() {
 }
 
 byte calculateSpeed(byte spdc) {
+  if (spdc == 10) {
+    return MAX_SPEED;
+  }
+
   byte cspd = MIN_SPEED + (MAX_SPEED - MIN_SPEED) / 10 * spdc;
 
   //Serial.print("Speed: "); Serial.print(spdc); Serial.print(" / "); Serial.println(cspd);
