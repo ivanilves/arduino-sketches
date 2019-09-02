@@ -1,7 +1,7 @@
 #define ENA_PIN 10
 #define ENB_PIN 11
-#define IN1_PIN 2
-#define IN2_PIN 3
+#define IN1_PIN 3
+#define IN2_PIN 2
 #define IN3_PIN 5
 #define IN4_PIN 4
 #define BT_RX_PIN 6
@@ -9,6 +9,7 @@
 
 #define MIN_SPEED 96
 #define MAX_SPEED 255
+#define BACKWARD_SPEED 96
 
 #include <SoftwareSerial.h>
 SoftwareSerial bt(BT_RX_PIN, BT_TX_PIN);
@@ -55,7 +56,7 @@ void loop() {
         goForwardLeft(_spd);
         break;
       case 'B':
-        goBackward(_spd);
+        goBackward(BACKWARD_SPEED);
         break;
       case 'J':
         goBackwardRight(_spd);
