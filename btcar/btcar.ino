@@ -56,7 +56,7 @@ void loop() {
         goForwardLeft(_spd);
         break;
       case 'B':
-        goBackward(BACKWARD_SPEED);
+        goBackward(_spd);
         break;
       case 'J':
         goBackwardRight(_spd);
