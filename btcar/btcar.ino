@@ -28,8 +28,8 @@ void setup() {
   bt.begin(9600);
 }
 
-volatile byte _spd = MIN_SPEED;
-volatile byte _spdc = 6;
+volatile byte _spd = MAX_SPEED;
+volatile byte _spdc = 10;
 
 char btcmd;
 
