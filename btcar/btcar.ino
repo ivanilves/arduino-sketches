@@ -31,6 +31,7 @@ void setup() {
 volatile byte _spd = MAX_SPEED;
 volatile byte _spdc = 10;
 
+bool debug = false;
 char btcmd;
 
 void loop() {
@@ -198,7 +199,9 @@ byte calculateSpeed(byte spdc) {
 
   byte cspd = MIN_SPEED + (MAX_SPEED - MIN_SPEED) / 10 * spdc;
 
-  //Serial.print("Speed: "); Serial.print(spdc); Serial.print(" / "); Serial.println(cspd);
+  if (debug) {
+    Serial.print("Speed: "); Serial.print(spdc); Serial.print(" / "); Serial.println(cspd);
+  }
 
   return cspd;
 }
