@@ -6,6 +6,7 @@
 #define IN4_PIN 4
 #define BT_RX_PIN 6
 #define BT_TX_PIN 7
+#define BUZZ_PIN 13
 
 #define MIN_SPEED 96
 #define MAX_SPEED 255
@@ -33,6 +34,8 @@ byte _spdc = 10;
 
 bool debug = false;
 char btcmd;
+
+bool buzzer = false;
 
 void loop() {
   if (bt.available()) {
@@ -104,10 +107,22 @@ void loop() {
       case 'q':
         _spdc = 10;
         break;
+      case 'V':
+        buzzer = true;
+        break;
+      case 'v':
+        buzzer = false;
+        break;
       default:
         Serial.print("Unhandled command: "); Serial.println(btcmd);
         break;
     }
+  }
+
+  if (buzzer) {
+    tone(BUZZ_PIN, 2500);
+  } else {
+    noTone(BUZZ_PIN);
   }
 }
 
