@@ -35,7 +35,11 @@ byte _spdc = 10;
 bool debug = false;
 char btcmd;
 
+const unsigned int buzzint = 100;
+const unsigned int buzzfreq = 1000;
 bool buzzer = false;
+bool buzzac = true;
+unsigned long buzztime = millis();
 
 void loop() {
   if (bt.available()) {
@@ -120,7 +124,16 @@ void loop() {
   }
 
   if (buzzer) {
-    tone(BUZZ_PIN, 2500);
+    if (millis() - buzztime > buzzint) {
+      buzztime = millis();
+      buzzac = !buzzac;
+    }
+
+    if (buzzac) {
+      tone(BUZZ_PIN, buzzfreq);
+    } else {
+      noTone(BUZZ_PIN);
+    }
   } else {
     noTone(BUZZ_PIN);
   }
