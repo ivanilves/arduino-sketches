@@ -1,3 +1,5 @@
+// #define DEBUG
+
 #define ENA_PIN 10
 #define ENB_PIN 11
 #define IN1_PIN 3
@@ -7,6 +9,10 @@
 #define BT_RX_PIN 6
 #define BT_TX_PIN 7
 #define BUZZ_PIN 13
+
+#define CRS_PIN A0
+#define CRS_BASE 512
+#define CRS_PCT 10
 
 #define MIN_SPEED 96
 #define MAX_SPEED 255
@@ -32,7 +38,6 @@ void setup() {
 byte _spd = MAX_SPEED;
 byte _spdc = 10;
 
-bool debug = false;
 char btcmd;
 
 const unsigned int buzzint = 100;
@@ -41,11 +46,23 @@ bool buzzer = false;
 bool buzzac = true;
 unsigned long buzztime = millis();
 
+int crs;
+byte cR;
+byte cL;
+
 void loop() {
   if (bt.available()) {
     btcmd = (char)bt.read();
 
     _spd = calculateSpeed(_spdc);
+
+    crs = analogRead(CRS_PIN);
+    cR = crs2cR(crs);
+    cL = crs2cL(crs);
+
+#ifdef DEBUG
+    Serial.print("CRS: "); Serial.print(crs);  Serial.print(" => "); Serial.print(cR); Serial.print(" / "); Serial.println(cL);
+#endif
 
     switch (btcmd) {
       case 'D':
@@ -144,8 +161,8 @@ void goForward(byte mspd) {
   digitalWrite(IN2_PIN, HIGH);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
-  analogWrite(ENA_PIN, mspd);
-  analogWrite(ENB_PIN, mspd);
+  analogWrite(ENA_PIN, cR * mspd / 100);
+  analogWrite(ENB_PIN, cL * mspd / 100);
 }
 
 void goForwardRight(byte mspd) {
@@ -171,8 +188,8 @@ void goBackward(byte mspd) {
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, HIGH);
   digitalWrite(IN4_PIN, LOW);
-  analogWrite(ENA_PIN, mspd);
-  analogWrite(ENB_PIN, mspd);
+  analogWrite(ENA_PIN, cR * mspd / 100);
+  analogWrite(ENB_PIN, cL * mspd / 100);
 }
 
 void goBackwardRight(byte mspd) {
@@ -227,9 +244,31 @@ byte calculateSpeed(byte spdc) {
 
   byte cspd = MIN_SPEED + (MAX_SPEED - MIN_SPEED) / 10 * spdc;
 
-  if (debug) {
-    Serial.print("Speed: "); Serial.print(spdc); Serial.print(" / "); Serial.println(cspd);
-  }
+#ifdef DEBUG
+  Serial.print("Speed: "); Serial.print(spdc); Serial.print(" / "); Serial.println(cspd);
+#endif
 
   return cspd;
+}
+
+byte crs2cR(int crs) {
+  if (crs >= 500) {
+    crs = CRS_BASE;
+  }
+
+  float q = CRS_BASE - crs;
+  float p = q / CRS_BASE * CRS_PCT;
+
+  return 100 - p;
+}
+
+byte crs2cL(int crs) {
+  if (crs < 524) {
+    crs = CRS_BASE;
+  }
+
+  float q = crs - CRS_BASE;
+  float p = q / CRS_BASE * CRS_PCT;
+
+  return 100 - p;
 }
