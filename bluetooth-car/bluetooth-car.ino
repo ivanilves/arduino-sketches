@@ -1,13 +1,13 @@
-#define DEBUG
-
 #define ENA_PIN 10
 #define ENB_PIN 11
 #define IN1_PIN 3
 #define IN2_PIN 2
 #define IN3_PIN 5
 #define IN4_PIN 4
-#define BT_RX_PIN 6
-#define BT_TX_PIN 7
+#define F_LIGHT_PIN 6
+#define R_LIGHT_PIN 7
+#define BT_RX_PIN 9
+#define BT_TX_PIN 8
 #define BUZZ_PIN 13
 
 #define CRS_PIN A0
@@ -27,6 +27,8 @@ void setup() {
   pinMode(IN2_PIN, OUTPUT);
   pinMode(IN3_PIN, OUTPUT);
   pinMode(IN4_PIN, OUTPUT);
+  pinMode(F_LIGHT_PIN, OUTPUT);
+  pinMode(R_LIGHT_PIN, OUTPUT);
   pinMode(BT_RX_PIN, INPUT);
   pinMode(BT_TX_PIN, OUTPUT);
 
@@ -62,15 +64,12 @@ void loop() {
         fullStop();
         break;
       case 'S':
-        fullStop();
+        stopMovement();
         break;
       case 'F':
         crs = analogRead(CRS_PIN);
         cR = crs2cR(crs);
         cL = crs2cL(crs);
-#ifdef DEBUG
-        Serial.print("CRS: "); Serial.print(crs);  Serial.print(" => "); Serial.print(cR); Serial.print(" / "); Serial.println(cL);
-#endif
         goForward(_spd);
         break;
       case 'I':
@@ -80,6 +79,9 @@ void loop() {
         goForwardLeft(_spd);
         break;
       case 'B':
+        crs = analogRead(CRS_PIN);
+        cR = crs2cR(crs);
+        cL = crs2cL(crs);
         goBackward(_spd);
         break;
       case 'J':
@@ -157,7 +159,7 @@ void loop() {
   delay(10);
 }
 
-void info(String txt){ 
+void info(String txt) {
   Serial.print("INFO: "); Serial.println(txt);
 }
 
@@ -171,10 +173,6 @@ void goForward(byte mspd) {
   digitalWrite(IN4_PIN, HIGH);
   analogWrite(ENA_PIN, rspd);
   analogWrite(ENB_PIN, lspd);
-
-#ifdef DEBUG
-  Serial.print("R Speed: "); Serial.print(rspd); Serial.print(" / L Speed: "); Serial.println(lspd);
-#endif
 }
 
 void goForwardRight(byte mspd) {
@@ -196,12 +194,15 @@ void goForwardLeft(byte mspd) {
 }
 
 void goBackward(byte mspd) {
+  byte rspd = cR * mspd / 100;
+  byte lspd = cL * mspd / 100;
+
   digitalWrite(IN1_PIN, HIGH);
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, HIGH);
   digitalWrite(IN4_PIN, LOW);
-  analogWrite(ENA_PIN, mspd);
-  analogWrite(ENB_PIN, mspd);
+  analogWrite(ENA_PIN, rspd);
+  analogWrite(ENB_PIN, lspd);
 }
 
 void goBackwardRight(byte mspd) {
@@ -240,13 +241,19 @@ void turnLeft(byte mspd) {
   analogWrite(ENB_PIN, mspd);
 }
 
-void fullStop() {
+void stopMovement() {
   digitalWrite(IN1_PIN, LOW);
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, LOW);
   analogWrite(ENA_PIN, 0);
   analogWrite(ENB_PIN, 0);
+}
+
+void fullStop() {
+  stopMovement();
+
+  buzzer = false;
 }
 
 byte calculateSpeed(byte spdc) {
@@ -256,14 +263,14 @@ byte calculateSpeed(byte spdc) {
 
   byte cspd = MIN_SPEED + (MAX_SPEED - MIN_SPEED) / 10 * spdc;
 
-#ifdef DEBUG
-  Serial.print("Speed: "); Serial.print(spdc); Serial.print(" / "); Serial.println(cspd);
-#endif
-
   return cspd;
 }
 
 byte crs2cR(int crs) {
+  if (crs == 0) {
+    return 100;
+  }
+
   if (crs >= 500) {
     crs = CRS_BASE;
   }
@@ -275,6 +282,10 @@ byte crs2cR(int crs) {
 }
 
 byte crs2cL(int crs) {
+  if (crs == 0) {
+    return 100;
+  }
+
   if (crs < 524) {
     crs = CRS_BASE;
   }
