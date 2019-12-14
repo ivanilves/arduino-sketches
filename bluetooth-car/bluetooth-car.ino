@@ -14,7 +14,7 @@
 #define CRS_BASE 512
 #define CRS_PCT 25
 
-#define MIN_SPEED 64
+#define MIN_SPEED 96
 #define MAX_SPEED 255
 
 #include <SoftwareSerial.h>
@@ -50,8 +50,8 @@ bool buzzac = true;
 unsigned long buzztime = millis();
 
 int crs;
-byte cR;
-byte cL;
+byte _cR;
+byte _cL;
 
 void loop() {
   if (bt.available()) {
@@ -68,9 +68,9 @@ void loop() {
         break;
       case 'F':
         crs = analogRead(CRS_PIN);
-        cR = crs2cR(crs);
-        cL = crs2cL(crs);
-        goForward(_spd);
+        _cR = crs2cR(crs);
+        _cL = crs2cL(crs);
+        goForward(_spd, _cR, _cL);
         break;
       case 'I':
         goForwardRight(_spd);
@@ -80,9 +80,9 @@ void loop() {
         break;
       case 'B':
         crs = analogRead(CRS_PIN);
-        cR = crs2cR(crs);
-        cL = crs2cL(crs);
-        goBackward(_spd);
+        _cR = crs2cR(crs);
+        _cL = crs2cL(crs);
+        goBackward(_spd, _cR, _cL);
         break;
       case 'J':
         goBackwardRight(_spd);
@@ -163,7 +163,7 @@ void info(String txt) {
   Serial.print("INFO: "); Serial.println(txt);
 }
 
-void goForward(byte mspd) {
+void goForward(byte mspd, int cR, int cL) {
   byte rspd = cR * mspd / 100;
   byte lspd = cL * mspd / 100;
 
@@ -193,7 +193,7 @@ void goForwardLeft(byte mspd) {
   analogWrite(ENB_PIN, mspd);
 }
 
-void goBackward(byte mspd) {
+void goBackward(byte mspd, int cR, int cL) {
   byte rspd = cR * mspd / 100;
   byte lspd = cL * mspd / 100;
 
