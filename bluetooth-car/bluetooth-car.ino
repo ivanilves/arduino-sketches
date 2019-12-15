@@ -4,8 +4,8 @@
 #define IN2_PIN 2
 #define IN3_PIN 5
 #define IN4_PIN 4
-#define F_LIGHT_PIN 6
-#define R_LIGHT_PIN 7
+#define F_LIGHT_PIN 7
+#define R_LIGHT_PIN 6
 #define BT_RX_PIN 9
 #define BT_TX_PIN 8
 #define BUZZ_PIN 13
@@ -49,9 +49,13 @@ bool buzzer = false;
 bool buzzac = true;
 unsigned long buzztime = millis();
 
-int crs;
-byte _cR;
-byte _cL;
+bool f_light = false;
+bool r_light = false;
+
+const unsigned int xint = 100;
+bool xtra = false;
+bool xtac = true;
+unsigned long xtime = millis();
 
 void loop() {
   if (bt.available()) {
@@ -67,10 +71,7 @@ void loop() {
         stopMovement();
         break;
       case 'F':
-        crs = analogRead(CRS_PIN);
-        _cR = crs2cR(crs);
-        _cL = crs2cL(crs);
-        goForward(_spd, _cR, _cL);
+        goForward(_spd);
         break;
       case 'I':
         goForwardRight(_spd);
@@ -79,10 +80,7 @@ void loop() {
         goForwardLeft(_spd);
         break;
       case 'B':
-        crs = analogRead(CRS_PIN);
-        _cR = crs2cR(crs);
-        _cL = crs2cL(crs);
-        goBackward(_spd, _cR, _cL);
+        goBackward(_spd);
         break;
       case 'J':
         goBackwardRight(_spd);
@@ -135,6 +133,28 @@ void loop() {
       case 'v':
         buzzer = false;
         break;
+      case 'W':
+        digitalWrite(F_LIGHT_PIN, HIGH);
+        f_light = true;
+        break;
+      case 'w':
+        digitalWrite(F_LIGHT_PIN, LOW);
+        f_light = false;
+        break;
+      case 'U':
+        digitalWrite(R_LIGHT_PIN, HIGH);
+        r_light = true;
+        break;
+      case 'u':
+        digitalWrite(R_LIGHT_PIN, LOW);
+        r_light = false;
+        break;
+      case 'X':
+        xtra = true;
+        break;
+      case 'x':
+        xtra = false;
+        break;
       default:
         Serial.print("Unhandled command: "); Serial.println(btcmd);
         break;
@@ -156,6 +176,40 @@ void loop() {
     noTone(BUZZ_PIN);
   }
 
+  if (xtra) {
+    if (millis() - xtime > xint) {
+      xtime = millis();
+      xtac = !xtac;
+    }
+
+    if (xtac) {
+      if (f_light) {
+        digitalWrite(F_LIGHT_PIN, HIGH);
+      }
+      if (r_light) {
+        digitalWrite(R_LIGHT_PIN, LOW);
+      }
+    } else {
+      if (f_light) {
+        digitalWrite(F_LIGHT_PIN, LOW);
+      }
+      if (r_light) {
+        digitalWrite(R_LIGHT_PIN, HIGH);
+      }
+    }
+  } else {
+    if (f_light) {
+      digitalWrite(F_LIGHT_PIN, HIGH);
+    } else {
+      digitalWrite(F_LIGHT_PIN, LOW);
+    }
+    if (r_light) {
+      digitalWrite(R_LIGHT_PIN, HIGH);
+    } else {
+      digitalWrite(R_LIGHT_PIN, LOW);
+    }
+  }
+
   delay(10);
 }
 
@@ -163,9 +217,11 @@ void info(String txt) {
   Serial.print("INFO: "); Serial.println(txt);
 }
 
-void goForward(byte mspd, int cR, int cL) {
-  byte rspd = cR * mspd / 100;
-  byte lspd = cL * mspd / 100;
+void goForward(byte mspd) {
+  int crs = analogRead(CRS_PIN);
+
+  byte rspd = crs2cR(crs) * mspd / 100;
+  byte lspd = crs2cL(crs) * mspd / 100;
 
   digitalWrite(IN1_PIN, LOW);
   digitalWrite(IN2_PIN, HIGH);
@@ -193,16 +249,13 @@ void goForwardLeft(byte mspd) {
   analogWrite(ENB_PIN, mspd);
 }
 
-void goBackward(byte mspd, int cR, int cL) {
-  byte rspd = cR * mspd / 100;
-  byte lspd = cL * mspd / 100;
-
+void goBackward(byte mspd) {
   digitalWrite(IN1_PIN, HIGH);
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, HIGH);
   digitalWrite(IN4_PIN, LOW);
-  analogWrite(ENA_PIN, rspd);
-  analogWrite(ENB_PIN, lspd);
+  analogWrite(ENA_PIN, mspd);
+  analogWrite(ENB_PIN, mspd);
 }
 
 void goBackwardRight(byte mspd) {
@@ -254,6 +307,11 @@ void fullStop() {
   stopMovement();
 
   buzzer = false;
+
+  f_light = false;
+  r_light = false;
+
+  xtra = false;
 }
 
 byte calculateSpeed(byte spdc) {
