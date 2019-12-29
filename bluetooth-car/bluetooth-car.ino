@@ -43,16 +43,14 @@ byte _spdc = 10;
 
 char btcmd;
 
-const unsigned int buzzint = 100;
+const unsigned int buzzint = 500;
 const unsigned int buzzfreq = 1000;
 bool buzzer = false;
-bool buzzac = true;
-unsigned long buzztime = millis();
 
 bool f_light = false;
 bool r_light = false;
 
-const unsigned int xint = 100;
+const unsigned int xint = 200;
 bool xtra = false;
 bool xtac = true;
 unsigned long xtime = millis();
@@ -162,18 +160,11 @@ void loop() {
   }
 
   if (buzzer) {
-    if (millis() - buzztime > buzzint) {
-      buzztime = millis();
-      buzzac = !buzzac;
-    }
-
-    if (buzzac) {
-      tone(BUZZ_PIN, buzzfreq);
-    } else {
-      noTone(BUZZ_PIN);
-    }
-  } else {
+    tone(BUZZ_PIN, buzzfreq);
+    delay(buzzint);
     noTone(BUZZ_PIN);
+
+    buzzer = false;
   }
 
   if (xtra) {
