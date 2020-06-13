@@ -1,39 +1,70 @@
 #include <Servo.h>
 
-#define START 0
-#define STOP 180
-
-#define STEP 5
-#define DELAY 100
+#define SRV_PIN 9
+#define SRV_START 5
+#define SRV_STOP 125
+#define SRV_STEP 1
+#define SRV_DELAY 20
+#define SRV_PAUSE 5000
 
 Servo srv;
 
+#define TRIG_PIN 10
+#define ECHO_PIN 11
+#define MAX_DIST 10
+#define MIN_DIST 5
+
+
 void setup() {
- srv.attach(9);
- srv.write(START);
+  Serial.begin(9600);
+
+  srv.attach(SRV_PIN);
+  srv.write(SRV_START);
 }
 
-int pos = START;
+int calculateDistance(int duration) {
+  return duration * 0.034 / 2;
+}
+
+int duration;
+int distance;
+int pos = SRV_START;
 bool fw = true;
 
-void loop() {
-  if (fw) {
-    pos += STEP;
-  } else {
-    pos-= STEP;
-  }
+void loop() {  
+  /*digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
 
-  srv.write(pos);
+  duration = pulseIn(ECHO_PIN, HIGH);
+  distance = calculateDistance(duration);
 
-  if (pos >= STOP) {
-    delay(200);
-    fw = false;
-  } else {
-    if (pos <= START) {
-      delay(200);
-      fw = true;
+  Serial.print("Distance: ");
+  Serial.println(distance);
+*/
+/*  if (distance <= MAX_DIST and distance >= MIN_DIST) {
+*/
+    if (fw) {
+      pos += SRV_STEP;
+    } else {
+      pos -= SRV_STEP;
     }
-  }
+
+    srv.write(pos);
+
+    if (pos >= SRV_STOP) {
+      delay(SRV_PAUSE);
+      fw = false;
+    } else {
+      if (pos <= SRV_START) {
+        delay(SRV_PAUSE);
+        fw = true;
+      }
+    }
+  /*}*/
+
+  delay(SRV_DELAY);
   
-  delay(DELAY);
 }
