@@ -14,9 +14,10 @@
 #define SRV_PIN 9
 #define SRV_START 5
 #define SRV_STOP 125
-#define SRV_STEP 5
+#define SRV_INC 5
+#define SRV_DEC 5
 #define SRV_DELAY 5
-#define SRV_PAUSE 3000
+#define SRV_KEEP_OPEN 3000
 
 Servo srv;
 
@@ -26,8 +27,6 @@ Servo srv;
 #define MIN_DIST 25
 
 bool isOpen = false;
-bool needsToOpen = false;
-bool needsToClose = false;
 bool manuallyOpen = false;
 bool isOpening = false;
 bool isClosing = false;
@@ -61,8 +60,6 @@ void printState() {
   Serial.println("cm");
   
   printFlag("isOpen", isOpen);
-  printFlag("needsToOpen", needsToOpen);
-  printFlag("needsToClose", needsToClose);
   printFlag("manuallyOpen", manuallyOpen);
   printFlag("isOpening", isOpening);
   printFlag("isClosing", isClosing);
@@ -115,32 +112,21 @@ void loop() {
   if (!isOpening and !isClosing) {
     if (buttonPressed()) {
       if (isOpen) {
-        needsToClose = true;
+        isClosing = true;
         manuallyOpen = false;
       } else {
-        needsToOpen = true;
+        isOpening = true;
         manuallyOpen = true;
       }
     }
   }
 
-  if (needsToClose) {
-    isClosing = true;
-    isOpening = false;
-  }
-
-  if (needsToOpen) {
-    isClosing = false;
-    isOpening = true;
-  }
-
   if (isOpening) {
     if (srvPos < SRV_STOP) {
-      srvPos += SRV_STEP;
+      srvPos += SRV_INC;
       srv.write(srvPos);
       delay(SRV_DELAY);
     } else {
-      needsToOpen = false;
       isOpening = false;
       isOpen = true;
     }
@@ -148,11 +134,10 @@ void loop() {
 
   if (isClosing) {
     if (srvPos > SRV_START) {
-      srvPos -= SRV_STEP;
+      srvPos -= SRV_DEC;
       srv.write(srvPos);
       delay(SRV_DELAY);
     } else {
-      needsToClose = false;
       isClosing = false;
       isOpen = false;
     }
