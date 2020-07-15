@@ -41,12 +41,12 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
+  srv.attach(SRV_PIN);
+  srv.write(SRV_START);
+
 #ifdef DEBUG
   Serial.begin(9600);
 #endif
-
-  srv.attach(SRV_PIN);
-  srv.write(SRV_START);
 }
 
 void printState() {
@@ -58,7 +58,7 @@ void printState() {
   Serial.print("Distance: ");
   Serial.print(distance);
   Serial.println("cm");
-  
+
   printFlag("isOpen", isOpen);
   printFlag("manuallyOpen", manuallyOpen);
   printFlag("isOpening", isOpening);
@@ -97,21 +97,30 @@ int calculateDistance() {
 }
 
 void loop() {
+  distance = calculateDistance();
+
+  if (isOpen and !manuallyOpen) {
+    delay(SRV_KEEP_OPEN);
+    isOpen = false;
+    isClosing = true;
+  }
+
+  if (!isOpen and !isOpening and !isClosing) {
+    if (distance >= MIN_DIST and distance <= MAX_DIST) {
+      isOpening = true;
+    }
+  }
+
   if (isOpen or isOpening) {
     ledOn();
   } else {
     ledOff();
   }
 
-  distance = calculateDistance();
-
-#ifdef DEBUG
-  printState();
-#endif
-
   if (!isOpening and !isClosing) {
     if (buttonPressed()) {
       if (isOpen) {
+        isOpen = false;
         isClosing = true;
         manuallyOpen = false;
       } else {
@@ -142,6 +151,10 @@ void loop() {
       isOpen = false;
     }
   }
-  
+
   delay(STEP_DELAY);
+
+#ifdef DEBUG
+  printState();
+#endif
 }
