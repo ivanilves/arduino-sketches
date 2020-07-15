@@ -1,23 +1,23 @@
 #include <Servo.h>
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
-#define STEP_DELAY 500
+#define STEP_DELAY 250
 #else
-#define STEP_DELAY 50
+#define STEP_DELAY 10
 #endif
 
 #define BTN_PIN 2
 #define LED_PIN 13
 
 #define SRV_PIN 9
-#define SRV_START 5
-#define SRV_STOP 125
-#define SRV_INC 5
-#define SRV_DEC 5
-#define SRV_DELAY 5
-#define SRV_KEEP_OPEN 3000
+#define SRV_START 40
+#define SRV_STOP 135
+#define SRV_INC 1
+#define SRV_DEC 1
+#define SRV_KEEP_OPEN 5000
+#define SRV_KEEP_CLOSED 1000
 
 Servo srv;
 
@@ -111,7 +111,7 @@ void loop() {
     }
   }
 
-  if (isOpen or isOpening) {
+  if (isOpening) {
     ledOn();
   } else {
     ledOff();
@@ -134,8 +134,9 @@ void loop() {
     if (srvPos < SRV_STOP) {
       srvPos += SRV_INC;
       srv.write(srvPos);
-      delay(SRV_DELAY);
     } else {
+      srvPos = SRV_STOP;
+      srv.write(srvPos);
       isOpening = false;
       isOpen = true;
     }
@@ -145,10 +146,13 @@ void loop() {
     if (srvPos > SRV_START) {
       srvPos -= SRV_DEC;
       srv.write(srvPos);
-      delay(SRV_DELAY);
     } else {
+      srvPos = SRV_START;
+      srv.write(srvPos);
       isClosing = false;
       isOpen = false;
+      manuallyOpen = false;
+      delay(SRV_KEEP_CLOSED);
     }
   }
 
