@@ -2,22 +2,18 @@
 
 //#define DEBUG
 
-#ifdef DEBUG
-#define STEP_DELAY 250
-#else
-#define STEP_DELAY 10
-#endif
+#define INIT_DELAY 1000
+#define IDLE_DELAY 50
+#define OPENING_DELAY 20
+#define CLOSING_DELAY 10
+#define KEEP_OPEN_DELAY 5000
 
 #define BTN_PIN 2
 #define LED_PIN 13
 
 #define SRV_PIN 9
-#define SRV_START 40
-#define SRV_STOP 135
-#define SRV_INC 1
-#define SRV_DEC 1
-#define SRV_KEEP_OPEN 5000
-#define SRV_KEEP_CLOSED 1000
+#define SRV_CLOSED 45
+#define SRV_OPEN 135
 
 Servo srv;
 
@@ -31,8 +27,11 @@ bool manuallyOpen = false;
 bool isOpening = false;
 bool isClosing = false;
 
-int srvPos = SRV_START;
+int srvPos = SRV_CLOSED;
 int distance;
+
+unsigned long statusTime = millis();
+const int statusDelta = 250;
 
 void setup() {
   pinMode(BTN_PIN, INPUT_PULLUP);
@@ -42,7 +41,9 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
 
   srv.attach(SRV_PIN);
-  srv.write(SRV_START);
+  srv.write(SRV_CLOSED);
+
+  delay(INIT_DELAY);
 
 #ifdef DEBUG
   Serial.begin(9600);
@@ -97,32 +98,33 @@ int calculateDistance() {
 }
 
 void loop() {
-  distance = calculateDistance();
-
-  if (isOpen and !manuallyOpen) {
-    delay(SRV_KEEP_OPEN);
-    isOpen = false;
-    isClosing = true;
-  }
-
-  if (!isOpen and !isOpening and !isClosing) {
-    if (distance >= MIN_DIST and distance <= MAX_DIST) {
-      isOpening = true;
-    }
-  }
-
-  if (isOpening) {
+  if (isOpening or isClosing) {
     ledOn();
   } else {
     ledOff();
+  }
+
+  if (isOpen and !manuallyOpen) {
+    isOpen = false;
+    isClosing = true;
+    delay(KEEP_OPEN_DELAY);
+  }
+
+  if (!isOpen and !isOpening and !isClosing) {
+    distance = calculateDistance();
+
+    if (distance >= MIN_DIST and distance <= MAX_DIST) {
+      isOpening = true;
+      manuallyOpen = false;
+    }
   }
 
   if (!isOpening and !isClosing) {
     if (buttonPressed()) {
       if (isOpen) {
         isOpen = false;
-        isClosing = true;
         manuallyOpen = false;
+        isClosing = true;
       } else {
         isOpening = true;
         manuallyOpen = true;
@@ -131,34 +133,42 @@ void loop() {
   }
 
   if (isOpening) {
-    if (srvPos < SRV_STOP) {
-      srvPos += SRV_INC;
+    if (srvPos < SRV_OPEN) {
+      srvPos++;
       srv.write(srvPos);
     } else {
-      srvPos = SRV_STOP;
-      srv.write(srvPos);
-      isOpening = false;
       isOpen = true;
+      isOpening = false;
+      isClosing = false;
+      srvPos = SRV_OPEN;
+      srv.write(srvPos);
     }
+    delay(OPENING_DELAY);
   }
 
   if (isClosing) {
-    if (srvPos > SRV_START) {
-      srvPos -= SRV_DEC;
+    if (srvPos > SRV_CLOSED) {
+      srvPos--;
       srv.write(srvPos);
     } else {
-      srvPos = SRV_START;
-      srv.write(srvPos);
-      isClosing = false;
       isOpen = false;
       manuallyOpen = false;
-      delay(SRV_KEEP_CLOSED);
+      isOpening = false;
+      isClosing = false;
+      srvPos = SRV_CLOSED;
+      srv.write(srvPos);
     }
+    delay(CLOSING_DELAY);
   }
 
-  delay(STEP_DELAY);
+  if (!isOpening and !isClosing) {
+    delay(IDLE_DELAY);
+  }
 
 #ifdef DEBUG
-  printState();
+  if (millis() - statusTime > statusDelta) {
+    statusTime = millis();
+    printState();
+  }
 #endif
 }
