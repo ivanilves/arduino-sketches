@@ -1,24 +1,39 @@
 #include <Servo.h>
 
-//#define DEBUG
+#define DEBUG
 
-#define STEP_DELAY 9
+#ifdef DEBUG
+#define STEP_DELAY 500
+#else
+#define STEP_DELAY 50
+#endif
 
-#define BTN_PIN 7
-#define LED_PIN 4
+#define BTN_PIN 2
+#define LED_PIN 13
 
 #define SRV_PIN 9
 #define SRV_START 5
 #define SRV_STOP 125
-#define SRV_DELAY 20
+#define SRV_STEP 5
+#define SRV_DELAY 5
 #define SRV_PAUSE 3000
 
 Servo srv;
 
-#define TRIG_PIN 5
-#define ECHO_PIN 6
+#define TRIG_PIN 3
+#define ECHO_PIN 4
 #define MAX_DIST 80
 #define MIN_DIST 25
+
+bool isOpen = false;
+bool needsToOpen = false;
+bool needsToClose = false;
+bool manuallyOpen = false;
+bool isOpening = false;
+bool isClosing = false;
+
+int srvPos = SRV_START;
+int distance;
 
 void setup() {
   pinMode(BTN_PIN, INPUT_PULLUP);
@@ -33,10 +48,32 @@ void setup() {
 
   srv.attach(SRV_PIN);
   srv.write(SRV_START);
+}
 
-  ledOn();
-  delay(500);
-  ledOff();
+void printState() {
+  Serial.println("--- STATE ---");
+
+  Serial.print("Servo position: ");
+  Serial.println(srvPos);
+
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println("cm");
+  
+  printFlag("isOpen", isOpen);
+  printFlag("needsToOpen", needsToOpen);
+  printFlag("needsToClose", needsToClose);
+  printFlag("manuallyOpen", manuallyOpen);
+  printFlag("isOpening", isOpening);
+  printFlag("isClosing", isClosing);
+
+  Serial.println("--- END ---");
+}
+
+void printFlag(String flagName, bool flagValue) {
+  Serial.print(flagName);
+  Serial.print(": ");
+  Serial.println(flagValue);
 }
 
 void ledOn() {
@@ -62,16 +99,6 @@ int calculateDistance() {
   return duration * 0.034 / 2;
 }
 
-bool isOpen = false;
-bool needsToOpen = false;
-bool needsToClose = false;
-bool manuallyOpen = false;
-bool isClosing = false;
-bool isOpening = false;
-
-int srvPos = SRV_START;
-int distance;
-
 void loop() {
   if (isOpen or isOpening) {
     ledOn();
@@ -82,8 +109,7 @@ void loop() {
   distance = calculateDistance();
 
 #ifdef DEBUG
-  Serial.print("Distance: ");
-  Serial.println(distance);
+  printState();
 #endif
 
   if (!isOpening and !isClosing) {
@@ -110,7 +136,7 @@ void loop() {
 
   if (isOpening) {
     if (srvPos < SRV_STOP) {
-      srvPos++;
+      srvPos += SRV_STEP;
       srv.write(srvPos);
       delay(SRV_DELAY);
     } else {
@@ -122,7 +148,7 @@ void loop() {
 
   if (isClosing) {
     if (srvPos > SRV_START) {
-      srvPos--;
+      srvPos -= SRV_STEP;
       srv.write(srvPos);
       delay(SRV_DELAY);
     } else {
@@ -131,6 +157,6 @@ void loop() {
       isOpen = false;
     }
   }
-
+  
   delay(STEP_DELAY);
 }
