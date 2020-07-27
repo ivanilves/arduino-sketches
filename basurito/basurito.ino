@@ -4,8 +4,8 @@
 
 #define INIT_DELAY 1000
 #define IDLE_DELAY 50
-#define OPENING_DELAY 20
-#define CLOSING_DELAY 10
+#define OPENING_DELAY 10
+#define CLOSING_DELAY 5
 #define KEEP_OPEN_DELAY 5000
 
 #define BTN_PIN 2
