@@ -5,7 +5,7 @@
 #define INIT_DELAY 1000
 #define IDLE_DELAY 50
 #define OPENING_DELAY 10
-#define CLOSING_DELAY 5
+#define CLOSING_DELAY 10
 #define KEEP_OPEN_DELAY 5000
 
 #define BTN_PIN 2
@@ -13,7 +13,7 @@
 
 #define SRV_PIN 9
 #define SRV_CLOSED 45
-#define SRV_OPEN 135
+#define SRV_OPEN 145
 
 Servo srv;
 
