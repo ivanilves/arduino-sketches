@@ -2,11 +2,13 @@
 
 //#define DEBUG
 
-#define INIT_DELAY 1000
+#define INIT_DELAY 100
 #define IDLE_DELAY 50
 #define OPENING_DELAY 10
 #define CLOSING_DELAY 1
 #define KEEP_OPEN_DELAY 5000
+
+#define RST_PIN 12
 
 #define BTN_PIN 2
 #define LED_PIN 13
@@ -34,6 +36,11 @@ unsigned long statusTime = millis();
 const int statusDelta = 250;
 
 void setup() {
+  digitalWrite(RST_PIN, HIGH);
+
+  delay(INIT_DELAY);
+
+  pinMode(RST_PIN, OUTPUT);
   pinMode(BTN_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
   pinMode(SRV_PIN, OUTPUT);
@@ -157,6 +164,8 @@ void loop() {
       isClosing = false;
       srvPos = SRV_CLOSED;
       srv.write(srvPos);
+      delay(IDLE_DELAY);
+      digitalWrite(RST_PIN, LOW);
     }
     delay(CLOSING_DELAY);
   }
