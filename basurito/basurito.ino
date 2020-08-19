@@ -1,12 +1,11 @@
 #include <Servo.h>
+#include <LowPower.h>
 
 //#define DEBUG
 
 #define INIT_DELAY 1000
-#define IDLE_DELAY 50
 #define OPENING_DELAY 10
 #define CLOSING_DELAY 10
-#define KEEP_OPEN_DELAY 5000
 
 #define BTN_PIN 2
 #define LED_PIN 13
@@ -107,7 +106,7 @@ void loop() {
   if (isOpen and !manuallyOpen) {
     isOpen = false;
     isClosing = true;
-    delay(KEEP_OPEN_DELAY);
+    LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
   }
 
   if (!isOpen and !isOpening and !isClosing) {
@@ -162,7 +161,7 @@ void loop() {
   }
 
   if (!isOpening and !isClosing) {
-    delay(IDLE_DELAY);
+    LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF);
   }
 
 #ifdef DEBUG
