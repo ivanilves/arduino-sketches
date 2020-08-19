@@ -3,7 +3,6 @@
 
 //#define DEBUG
 
-#define INIT_DELAY 1000
 #define OPENING_DELAY 10
 #define CLOSING_DELAY 10
 
@@ -41,8 +40,6 @@ void setup() {
 
   srv.attach(SRV_PIN);
   srv.write(SRV_CLOSED);
-
-  delay(INIT_DELAY);
 
 #ifdef DEBUG
   Serial.begin(9600);
