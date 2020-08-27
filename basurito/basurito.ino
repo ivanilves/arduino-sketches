@@ -158,7 +158,7 @@ void loop() {
   }
 
   if (!isOpening and !isClosing) {
-    LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF);
+    LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
   }
 
 #ifdef DEBUG
