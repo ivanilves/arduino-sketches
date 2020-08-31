@@ -4,6 +4,9 @@ Started as a woodworking project, a trash can and a lid made from two pine board
 
 ![](front.jpg)
 
+## Video demo?
+https://www.dropbox.com/s/rejr2ne6q7ah067/basurito.mp4?dl=0
+
 ## Features
 
 * Opens when detects any presense above the lid;
@@ -21,6 +24,3 @@ Started as a woodworking project, a trash can and a lid made from two pine board
 * 12V battery power + DC/DC step down adaptor (12V=>5V);
 
 ![](internal.jpg)
-
-## Demo?
-https://www.dropbox.com/s/rejr2ne6q7ah067/basurito.mp4?dl=0
