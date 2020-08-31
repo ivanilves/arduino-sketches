@@ -11,7 +11,7 @@ https://www.dropbox.com/s/rejr2ne6q7ah067/basurito.mp4?dl=0
 
 * Opens when detects any presense above the lid;
 * Closes automatically in a few seconds if open automatically;
-* Can be open and closed manually with a button;
+* Can be open and closed manually with a button (to change bags or keep open for a longer time);
 * Has a led signaling opening/closing/booting states;
 
 ![](rear.jpg)
