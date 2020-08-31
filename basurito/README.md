@@ -1,11 +1,12 @@
 # Self-opening trash can
 
 Started as a woodworking project, a trash can and a lid made from two pine boards and a sheet of plywood. Made almost entirely using a jigsaw and then painted with acrylic spray... then ...to make it less boring, I've soldered some electronic circuits and wrote an Arduino sketch to control the automation :robot:
+*Oh shi- now I feed it with the garbage all day long and you know, it does feel so relaxing* :joy:
 
 ![](front.jpg)
 
 ## Video demo?
-https://www.dropbox.com/s/rejr2ne6q7ah067/basurito.mp4?dl=0
+https://www.dropbox.com/s/rejr2ne6q7ah067/basurito.mp4?dl=0 :movie_camera:
 
 ## Features
 
