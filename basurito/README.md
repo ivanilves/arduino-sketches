@@ -8,6 +8,8 @@ Started as a woodworking project, a trash can and a lid made from two pine board
 ## Video demo?
 https://www.dropbox.com/s/rejr2ne6q7ah067/basurito.mp4?dl=0 :movie_camera:
 
+![gif](https://i.imgur.com/fKpMDtb.gif)
+
 ## Features
 
 * Opens when detects any presense above the lid;
