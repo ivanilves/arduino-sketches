@@ -1,8 +1,6 @@
 #include <Servo.h>
 #include <LowPower.h>
 
-//#define DEBUG
-
 #define OPENING_DELAY 10
 #define CLOSING_DELAY 10
 
@@ -15,21 +13,36 @@
 
 Servo srv;
 
+int srvPos = SRV_CLOSED;
+
 #define TRIG_PIN 3
 #define ECHO_PIN 4
+
 #define MAX_DIST 80
 #define MIN_DIST 25
 
+int distance;
+
 bool isOpen = false;
-bool manuallyOpen = false;
+bool isManual = false;
 bool isOpening = false;
 bool isClosing = false;
 
-int srvPos = SRV_CLOSED;
-int distance;
+bool isMoving() {
+  return isOpening || isClosing;
+}
 
-unsigned long statusTime = millis();
-const int statusDelta = 250;
+bool isClosed() {
+  return !isOpen && !isMoving();
+}
+
+bool isManuallyOpen() {
+  return isOpen && isManual;
+}
+
+bool isAutoOpen() {
+  return isOpen && !isManual;
+}
 
 void setup() {
   pinMode(BTN_PIN, INPUT_PULLUP);
@@ -40,34 +53,6 @@ void setup() {
 
   srv.attach(SRV_PIN);
   srv.write(SRV_CLOSED);
-
-#ifdef DEBUG
-  Serial.begin(9600);
-#endif
-}
-
-void printState() {
-  Serial.println("--- STATE ---");
-
-  Serial.print("Servo position: ");
-  Serial.println(srvPos);
-
-  Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.println("cm");
-
-  printFlag("isOpen", isOpen);
-  printFlag("manuallyOpen", manuallyOpen);
-  printFlag("isOpening", isOpening);
-  printFlag("isClosing", isClosing);
-
-  Serial.println("--- END ---");
-}
-
-void printFlag(String flagName, bool flagValue) {
-  Serial.print(flagName);
-  Serial.print(": ");
-  Serial.println(flagValue);
 }
 
 void ledOn() {
@@ -94,40 +79,37 @@ int calculateDistance() {
 }
 
 void loop() {
-  if (isOpening or isClosing) {
-    ledOn();
-  } else {
-    ledOff();
-  }
-
-  if (isOpen and !manuallyOpen) {
-    isOpen = false;
-    isClosing = true;
-    LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
-  }
-
-  if (!isOpen and !isOpening and !isClosing) {
+  // With lid closed we check for the ultrasound signal to see if we need to open lid
+  if (isClosed()) {
     distance = calculateDistance();
 
+    // If distance to obstacle (trash bag or hand) is within the range, signal opening
     if (distance >= MIN_DIST and distance <= MAX_DIST) {
       isOpening = true;
-      manuallyOpen = false;
+      isManual = false;
+    } else {
+      // ... if not, just sleep waiting for the better times ...
+      LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
     }
   }
 
-  if (!isOpening and !isClosing) {
+  // While lid not moving we also accept the button-triggered manual open/close directives
+  if (!isMoving()) {
     if (buttonPressed()) {
       if (isOpen) {
         isOpen = false;
-        manuallyOpen = false;
+        isManual = true;
+        isOpening = false;
         isClosing = true;
       } else {
+        isManual = true;
         isOpening = true;
-        manuallyOpen = true;
+        isClosing = false;
       }
     }
   }
 
+  // Keep opening the lid until we open it
   if (isOpening) {
     if (srvPos < SRV_OPEN) {
       srvPos++;
@@ -142,13 +124,14 @@ void loop() {
     delay(OPENING_DELAY);
   }
 
+  // Keep closing the lid until we close it
   if (isClosing) {
     if (srvPos > SRV_CLOSED) {
       srvPos--;
       srv.write(srvPos);
     } else {
       isOpen = false;
-      manuallyOpen = false;
+      isManual = false;
       isOpening = false;
       isClosing = false;
       srvPos = SRV_CLOSED;
@@ -157,14 +140,18 @@ void loop() {
     delay(CLOSING_DELAY);
   }
 
-  if (!isOpening and !isClosing) {
-    LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+  // After being open automatically (by sensor trigger), sleep and signal opening again ;)
+  if (isAutoOpen()) {
+    LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
+    isOpen = false;
+    isClosing = true;
   }
 
-#ifdef DEBUG
-  if (millis() - statusTime > statusDelta) {
-    statusTime = millis();
-    printState();
+  // If we are moving the lid, light the led on
+  // ... if we are not, put the led light off ...
+  if (isMoving()) {
+    ledOn();
+  } else {
+    ledOff();
   }
-#endif
 }
