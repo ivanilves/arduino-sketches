@@ -1,6 +1,7 @@
 #define PIN_RED 2
 #define PIN_YELLOW 3
 #define PIN_GREEN 4
+#define PIN_MODE_MANUAL 11
 #define PIN_MODE_YELLOW 12
 
 #define COLOR_RED 0
@@ -11,13 +12,14 @@
 #define DELAY_YELLOW 1500
 #define DELAY_GREEN 5000
 #define DELAY_BLINK 250
-#define DELAY_BUTTON_PRESS 250
+#define DELAY_BUTTON_PRESS 500
 
 #define MODE_AUTO 0
 #define MODE_YELLOW 1
+#define MODE_MANUAL 2
 
-unsigned long lastColorSwitchTime = millis();
-unsigned long lastModeSwitchTime = millis();
+unsigned long lastColorChangeTime = millis();
+unsigned long lastButtonPressTime = millis();
 
 unsigned int mode = MODE_AUTO;
 unsigned int color = COLOR_RED;
@@ -29,6 +31,7 @@ void setup() {
   pinMode(PIN_YELLOW, OUTPUT);
   pinMode(PIN_GREEN, OUTPUT);
   pinMode(PIN_MODE_YELLOW, INPUT_PULLUP);
+  pinMode(PIN_MODE_MANUAL, INPUT_PULLUP);
 }
 
 void setRedLight(bool on) {
@@ -91,8 +94,12 @@ bool yellowButtonPressed() {
   return digitalRead(PIN_MODE_YELLOW) == LOW;
 }
 
+bool blueButtonPressed() {
+  return digitalRead(PIN_MODE_MANUAL) == LOW;
+}
+
 void loop() {
-  if (millis() - lastModeSwitchTime > DELAY_BUTTON_PRESS) {
+  if (millis() - lastButtonPressTime > DELAY_BUTTON_PRESS) {
     if (yellowButtonPressed()) {
       if (mode != MODE_YELLOW) {
         mode = MODE_YELLOW;
@@ -102,8 +109,23 @@ void loop() {
         color = COLOR_RED;
       }
       on = true;
-      lastColorSwitchTime = millis();
-      lastModeSwitchTime = millis();
+      lastColorChangeTime = millis();
+      lastButtonPressTime = millis();
+    }
+    if (blueButtonPressed()) {
+      if (mode != MODE_MANUAL) {
+        mode = MODE_MANUAL;
+        color = COLOR_RED;
+      } else {
+        if (color == COLOR_RED) {
+          color = COLOR_GREEN;
+        } else  {
+          color = COLOR_RED;
+        }
+      }
+      on = true;
+      lastColorChangeTime = millis();
+      lastButtonPressTime = millis();
     }
   }
 
@@ -111,15 +133,15 @@ void loop() {
     case MODE_AUTO:
       switch (color) {
         case COLOR_RED:
-          if (millis() - lastColorSwitchTime > DELAY_RED) {
-            lastColorSwitchTime = millis();
+          if (millis() - lastColorChangeTime > DELAY_RED) {
+            lastColorChangeTime = millis();
             color = COLOR_YELLOW;
             prevColor = COLOR_RED;
           }
           break;
         case COLOR_YELLOW:
-          if (millis() - lastColorSwitchTime > DELAY_YELLOW) {
-            lastColorSwitchTime = millis();
+          if (millis() - lastColorChangeTime > DELAY_YELLOW) {
+            lastColorChangeTime = millis();
             if (prevColor == COLOR_GREEN) {
               color = COLOR_RED;
             } else {
@@ -129,8 +151,8 @@ void loop() {
           }
           break;
         case COLOR_GREEN:
-          if (millis() - lastColorSwitchTime > DELAY_GREEN) {
-            lastColorSwitchTime = millis();
+          if (millis() - lastColorChangeTime > DELAY_GREEN) {
+            lastColorChangeTime = millis();
             color = COLOR_YELLOW;
             prevColor = COLOR_GREEN;
           }
@@ -141,14 +163,16 @@ void loop() {
       }
       break;
     case MODE_YELLOW:
-      if (millis() - lastColorSwitchTime > DELAY_BLINK) {
-        lastColorSwitchTime = millis();
+      if (millis() - lastColorChangeTime > DELAY_BLINK) {
+        lastColorChangeTime = millis();
         if (on) {
           on = false;
         } else {
           on = true;
         }
       }
+      break;
+    case MODE_MANUAL:
       break;
   }
 
