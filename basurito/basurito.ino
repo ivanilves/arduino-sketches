@@ -18,8 +18,11 @@ int srvPos = SRV_CLOSED;
 #define TRIG_PIN 3
 #define ECHO_PIN 4
 
-#define MAX_DIST 80
+#define MAX_DIST 60
 #define MIN_DIST 25
+
+#define MAX_LONG_DIST 90
+#define MIN_LONG_DIST 61
 
 int distance;
 
@@ -27,6 +30,8 @@ bool isOpen = false;
 bool isManual = false;
 bool isOpening = false;
 bool isClosing = false;
+
+bool isOpenForLong = false;
 
 bool isMoving() {
   return isOpening || isClosing;
@@ -87,9 +92,17 @@ void loop() {
     if (distance >= MIN_DIST and distance <= MAX_DIST) {
       isOpening = true;
       isManual = false;
+      isOpenForLong = false;
     } else {
-      // ... if not, just sleep waiting for the better times ...
-      LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+      // special case: holding your hand at the longer distance may cause longer open time
+      if (distance >= MIN_LONG_DIST and distance <= MAX_LONG_DIST) {
+        isOpening = true;
+        isManual = false;
+        isOpenForLong = true;
+      } else {
+        // ... if not, just sleep waiting for the better times ...
+        LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+      }
     }
   }
 
@@ -142,7 +155,13 @@ void loop() {
 
   // After being open automatically (by sensor trigger), sleep and signal opening again ;)
   if (isAutoOpen()) {
-    LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
+    if (!isOpenForLong) {
+      LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
+    } else {
+      for (int c = 0; c < 10; c++) {
+        LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+      }
+    }
     isOpen = false;
     isClosing = true;
   }
