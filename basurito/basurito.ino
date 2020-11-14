@@ -149,6 +149,8 @@ void loop() {
       isClosing = false;
       srvPos = SRV_CLOSED;
       srv.write(srvPos);
+      delay(CLOSING_DELAY);
+      LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF);
     }
     delay(CLOSING_DELAY);
   }
