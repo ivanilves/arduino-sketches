@@ -19,7 +19,7 @@ int srvPos = SRV_CLOSED;
 #define ECHO_PIN 4
 
 #define MAX_DIST 60
-#define MIN_DIST 25
+#define MIN_DIST 20
 
 #define MAX_LONG_DIST 90
 #define MIN_LONG_DIST 61
@@ -166,6 +166,7 @@ void loop() {
     }
     isOpen = false;
     isClosing = true;
+    isOpenForLong = false;
   }
 
   // If we are moving the lid, light the led on
