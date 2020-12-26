@@ -12,9 +12,10 @@
 #define ECHO_PIN A0
 #define TRIG_PIN A1
 
-#define PLAY_DISTANCE 30
+#define PLAY_DISTANCE 75
 #define MODE_LOOPS 3
 #define LOOP_DELAY 50
+#define PLAY_CONFIRMATIONS 10
 #define PLAY_COOLDOWN_DELAY 10000
 
 /*
@@ -47,6 +48,7 @@ int _modeLoop = 0;
 bool _loopFinished = false;
 int _activeLed = -1;
 int _activeLedPair = -1;
+int _playConfirmation = 0;
 
 void setup() {
   for (int l = 0; l < LED_PIN_NUM; l++) {
@@ -149,13 +151,32 @@ int nextMode() {
   return SINGLE;
 }
 
+bool validatePlayConfirmation() {
+  if (_playConfirmation < PLAY_CONFIRMATIONS) {
+    _playConfirmation++;
+    return false;
+  }
+
+  _playConfirmation = 0;
+  return true;
+}
+
+void discardPlayConfirmation() {
+  _playConfirmation = 0;
+}
+
 void loop() {
   int distance = calculateDistance();
 
   if (distance < PLAY_DISTANCE and distance > 5) {
-    mode = X_PLAY;
+    if (validatePlayConfirmation()) {
+      mode = X_PLAY;
+    } else {
+      mode = nextMode();
+    }
   } else {
     mode = nextMode();
+    discardPlayConfirmation();
   }
 
   switch (mode) {
