@@ -12,9 +12,10 @@
 #define ECHO_PIN A0
 #define TRIG_PIN A1
 
-#define PLAY_DISTANCE 40
+#define PLAY_DISTANCE 30
 #define MODE_LOOPS 3
 #define LOOP_DELAY 50
+#define PLAY_COOLDOWN_DELAY 10000
 
 /*
    You should be able to fine-tune this sketch only by changing the "define"s above.
@@ -167,7 +168,9 @@ void loop() {
       break;
     case X_PLAY:
       allLedsOn();
-      delay(3000);
+      randomSeed(millis());
+      sing(random(1, 4));
+      delay(PLAY_COOLDOWN_DELAY);
       mode = SINGLE;
       break;
     default:
