@@ -64,7 +64,7 @@ void setup() {
 
 int calculateDistance() {
   digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
+  delay(2);
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
@@ -72,6 +72,30 @@ int calculateDistance() {
   int duration = pulseIn(ECHO_PIN, HIGH);
 
   return duration * 0.034 / 2;
+}
+
+bool distanceInRange() {
+  int distance = calculateDistance();
+
+  return distance < PLAY_DISTANCE and distance > 2;
+}
+
+void holdWhileOnDistance() {
+  int confirmations = 0;
+
+  while (true) {
+    if (distanceInRange()) {
+      confirmations = 0;
+    } else {
+      confirmations++;
+    }
+
+    if (confirmations >= PLAY_CONFIRMATIONS) {
+      return;
+    }
+
+    delay(10);
+  }
 }
 
 void allLedsOn() {
@@ -166,9 +190,7 @@ void discardPlayConfirmation() {
 }
 
 void loop() {
-  int distance = calculateDistance();
-
-  if (distance < PLAY_DISTANCE and distance > 5) {
+  if (distanceInRange()) {
     if (validatePlayConfirmation()) {
       mode = X_PLAY;
     } else {
@@ -191,6 +213,7 @@ void loop() {
       allLedsOn();
       randomSeed(millis());
       sing(random(1, 4));
+      holdWhileOnDistance();
       delay(PLAY_COOLDOWN_DELAY);
       mode = SINGLE;
       break;
