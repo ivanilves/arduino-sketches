@@ -18,6 +18,8 @@
 #define PLAY_CONFIRMATIONS 10
 #define PLAY_COOLDOWN_DELAY 10000
 
+//#define DEBUG
+
 /*
    You should be able to fine-tune this sketch only by changing the "define"s above.
    Go below this comment if you want to make deeper changes (you are welcome anyway)
@@ -60,18 +62,27 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
 
   allLedsOn(); delay(500); allLedsOff();
+
+  #ifdef DEBUG
+  Serial.begin(9600);
+  #endif
 }
 
 int calculateDistance() {
   digitalWrite(TRIG_PIN, LOW);
-  delay(2);
+  delayMicroseconds(2);
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
   int duration = pulseIn(ECHO_PIN, HIGH);
+  int distance = duration * 0.034 / 2;
 
-  return duration * 0.034 / 2;
+  #ifdef DEBUG
+  Serial.print(distance); Serial.print(" ("); Serial.print(_playConfirmation); Serial.println(");");
+  #endif
+
+  return distance;
 }
 
 bool distanceInRange() {
@@ -94,7 +105,7 @@ void holdWhileOnDistance() {
       return;
     }
 
-    delay(10);
+    delay(LOOP_DELAY);
   }
 }
 

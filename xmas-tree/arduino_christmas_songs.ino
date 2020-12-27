@@ -96,7 +96,9 @@ void sing(int s) {
   // iterate over the notes of the melody:
   song = s;
   if (song == 3) {
+    #ifdef DEBUG
     Serial.println(" 'We wish you a Merry Christmas'");
+    #endif
     int size = sizeof(wish_melody) / sizeof(int);
     for (int thisNote = 0; thisNote < size; thisNote++) {
 
@@ -117,7 +119,9 @@ void sing(int s) {
 
     }
   } else if (song == 2) {
+    #ifdef DEBUG
     Serial.println(" 'Santa Claus is coming to town'");
+    #endif
     int size = sizeof(santa_melody) / sizeof(int);
     for (int thisNote = 0; thisNote < size; thisNote++) {
 
@@ -138,8 +142,9 @@ void sing(int s) {
 
     }
   } else {
-
+    #ifdef DEBUG
     Serial.println(" 'Jingle Bells'");
+    #endif
     int size = sizeof(melody) / sizeof(int);
     for (int thisNote = 0; thisNote < size; thisNote++) {
 
