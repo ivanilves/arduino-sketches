@@ -9,7 +9,7 @@
 
 #define SRV_PIN 9
 #define SRV_CLOSED 45
-#define SRV_OPEN 145
+#define SRV_OPEN 135
 
 Servo srv;
 
@@ -18,11 +18,8 @@ int srvPos = SRV_CLOSED;
 #define TRIG_PIN 3
 #define ECHO_PIN 4
 
-#define MAX_DIST 60
+#define MAX_DIST 50
 #define MIN_DIST 20
-
-#define MAX_LONG_DIST 90
-#define MIN_LONG_DIST 61
 
 int distance;
 
@@ -30,8 +27,6 @@ bool isOpen = false;
 bool isManual = false;
 bool isOpening = false;
 bool isClosing = false;
-
-bool isOpenForLong = false;
 
 bool isMoving() {
   return isOpening || isClosing;
@@ -92,17 +87,9 @@ void loop() {
     if (distance >= MIN_DIST and distance <= MAX_DIST) {
       isOpening = true;
       isManual = false;
-      isOpenForLong = false;
     } else {
-      // special case: holding your hand at the longer distance may cause longer open time
-      if (distance >= MIN_LONG_DIST and distance <= MAX_LONG_DIST) {
-        isOpening = true;
-        isManual = false;
-        isOpenForLong = true;
-      } else {
-        // ... if not, just sleep waiting for the better times ...
-        LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
-      }
+      // ... if not, just sleep waiting for the better times ...
+      LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
     }
   }
 
@@ -157,16 +144,9 @@ void loop() {
 
   // After being open automatically (by sensor trigger), sleep and signal opening again ;)
   if (isAutoOpen()) {
-    if (!isOpenForLong) {
-      LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
-    } else {
-      for (int c = 0; c < 10; c++) {
-        LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-      }
-    }
+    LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
     isOpen = false;
     isClosing = true;
-    isOpenForLong = false;
   }
 
   // If we are moving the lid, light the led on
