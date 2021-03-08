@@ -17,10 +17,14 @@
 #define ECHOL_PIN A4
 #define TRIGL_PIN A5
 
-#define SPD 255
+#define RPCT 90
+#define LPCT 100
 
-const int turnDist = 30; // distance in cm on which normal turn will be triggered to avoid collision
-const int spinDist = 7; // distance in cm on which obstacle is considered too close and radical spin or pulling back will be triggered
+const byte initSpd = 128; // speed to start on the first loop to gain acceleration
+const byte moveSpd = 64; // speed to continue after first loop passed and we gained initial acceleration
+
+const int turnDist = 40; // distance in cm on which normal turn will be triggered to avoid collision
+const int spinDist = 15; // distance in cm on which obstacle is considered too close and radical spin or pulling back will be triggered
 
 const char _FWD = 'f';
 const char _RHT = 'r';
@@ -33,7 +37,7 @@ const char _BCK = 'b';
 int pcd;
 int prd;
 int pld;
-int pdir;
+char pdir;
 
 void setup() {
 #ifdef DEBUG
@@ -58,8 +62,9 @@ void setup() {
   pinMode(TRIGL_PIN, OUTPUT);
 }
 
-void debug(char dir, int cdist, int rdist, int ldist) {
+void debug(char dir, byte spd, int cdist, int rdist, int ldist) {
   Serial.print(" > "); Serial.print(dir);
+  Serial.print(" @ "); Serial.print(spd);
   Serial.print(" | C: "); Serial.print(cdist);
   Serial.print(" | R: "); Serial.print(rdist);
   Serial.print(" | L: "); Serial.print(ldist);
@@ -90,13 +95,18 @@ int lDist() {
   return calculateDistance(TRIGL_PIN, ECHOL_PIN);
 }
 
-byte chooseDirection(int cdist, int rdist, int ldist) {
-  // "0" is a sensor quirk: continue with previously chosen direction in this case
-  if ((cdist == 0) or (rdist == 0) or (ldist == 0)) {
+char chooseDirection(int cdist, int rdist, int ldist) {
+  // don't keep turning right or left more than one loop step
+  if ((pdir == _RHT) or (pdir == _LFT)) {
+    return _FWD;
+  }
+
+  // below "0" is a sensor quirk: continue with previously chosen direction in this case
+  if ((cdist <= 0) or (rdist <= 0) or (ldist <= 0)) {
     return pdir;
   }
 
-  // we got stuck: spin left or right ...
+  // we got stuck STUCK_LOOPS times in a row: spin left or right ...
   if ((cdist == pcd) and (rdist == prd) and (ldist == pld)) {
     // ... or just pull back if we already were spinning
     if ((pdir == _SPR) or (pdir == _SPL)) {
@@ -146,79 +156,95 @@ byte chooseDirection(int cdist, int rdist, int ldist) {
   return _FWD;
 }
 
-void goForward() {
+int getSpeed(byte dir) {
+  if (dir == pdir) {
+    return moveSpd;
+  }
+
+  if (dir == _RHT) {
+    return moveSpd;
+  }
+
+  if (dir == _LFT) {
+    return moveSpd;
+  }
+
+  return initSpd;
+}
+
+void goForward(int spd) {
   digitalWrite(IN1_PIN, LOW);
   digitalWrite(IN2_PIN, HIGH);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
-  analogWrite(ENA_PIN, SPD);
-  analogWrite(ENB_PIN, SPD);
+  analogWrite(ENA_PIN, spd * LPCT / 100);
+  analogWrite(ENB_PIN, spd * RPCT / 100);
 
   digitalWrite(LEDR_PIN, LOW);
   digitalWrite(LEDL_PIN, LOW);
 }
 
-void goRight() {
+void goRight(int spd) {
   digitalWrite(IN1_PIN, LOW);
   digitalWrite(IN2_PIN, HIGH);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
-  analogWrite(ENA_PIN, SPD);
+  analogWrite(ENA_PIN, spd);
   analogWrite(ENB_PIN, 0);
 
   digitalWrite(LEDR_PIN, HIGH);
   digitalWrite(LEDL_PIN, LOW);
 }
 
-void goLeft() {
+void goLeft(int spd) {
   digitalWrite(IN1_PIN, LOW);
   digitalWrite(IN2_PIN, HIGH);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
   analogWrite(ENA_PIN, 0);
-  analogWrite(ENB_PIN, SPD);
+  analogWrite(ENB_PIN, spd);
 
   digitalWrite(LEDR_PIN, LOW);
   digitalWrite(LEDL_PIN, HIGH);
 }
 
-void spinRight() {
+void spinRight(int spd) {
   digitalWrite(IN1_PIN, LOW);
   digitalWrite(IN2_PIN, HIGH);
   digitalWrite(IN3_PIN, HIGH);
   digitalWrite(IN4_PIN, LOW);
-  analogWrite(ENA_PIN, SPD);
-  analogWrite(ENB_PIN, SPD);
+  analogWrite(ENA_PIN, spd);
+  analogWrite(ENB_PIN, spd);
 
   digitalWrite(LEDR_PIN, HIGH);
   digitalWrite(LEDL_PIN, LOW);
 }
 
-void spinLeft() {
+void spinLeft(int spd) {
   digitalWrite(IN1_PIN, HIGH);
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
-  analogWrite(ENA_PIN, SPD);
-  analogWrite(ENB_PIN, SPD);
+  analogWrite(ENA_PIN, spd);
+  analogWrite(ENB_PIN, spd);
 
   digitalWrite(LEDR_PIN, LOW);
   digitalWrite(LEDL_PIN, HIGH);
 }
 
-void goBackward() {
+void goBackward(int spd) {
   digitalWrite(IN1_PIN, HIGH);
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, HIGH);
   digitalWrite(IN4_PIN, LOW);
-  analogWrite(ENA_PIN, SPD);
-  analogWrite(ENB_PIN, SPD);
+  analogWrite(ENA_PIN, spd);
+  analogWrite(ENB_PIN, spd);
 
   digitalWrite(LEDR_PIN, HIGH);
   digitalWrite(LEDL_PIN, HIGH);
 }
 
-void stopMovement() {
+void stopMovement(int spd) {
   digitalWrite(IN1_PIN, LOW);
   digitalWrite(IN2_PIN, LOW);
   digitalWrite(IN3_PIN, LOW);
@@ -235,10 +261,11 @@ void loop() {
   int ld = lDist();
   delay(33);
 
-  int dir = chooseDirection(cd, rd, ld);
+  char dir = chooseDirection(cd, rd, ld);
+  byte spd = getSpeed(dir);
 
 #ifdef DEBUG
-  debug(dir, cd, rd, ld);
+  debug(dir, spd, cd, rd, ld);
 #endif
 
   prd = rd;
@@ -248,29 +275,25 @@ void loop() {
 
   switch (dir) {
     case _FWD:
-      goForward();
+      goForward(spd);
       break;
     case _RHT:
-      goRight();
+      goRight(spd);
       break;
     case _LFT:
-      goLeft();
+      goLeft(spd);
       break;
     case _SPR:
-      spinRight();
+      spinRight(spd);
       break;
     case _SPL:
-      spinLeft();
+      spinLeft(spd);
       break;
     case _BCK:
-      goBackward();
+      goBackward(spd);
       break;
     default:
-      stopMovement();
+      stopMovement(spd);
       break;
   }
-
-  delay(100);
-  stopMovement();
-  delay(100);
 }
