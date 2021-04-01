@@ -2,6 +2,8 @@
 
 #define SENSOR_DELAY 10
 
+#define MAX_QUIRKS 3
+
 #define ENA_PIN 10
 #define ENB_PIN 9
 #define IN1_PIN 2
@@ -40,6 +42,9 @@ int pcd;
 int prd;
 int pld;
 char pdir;
+
+// quirk counter - triggers "circuir breaker" on reaching MAX_QUIRKS
+int qc = 0;
 
 void setup() {
 #ifdef DEBUG
@@ -98,9 +103,19 @@ int lDist() {
 }
 
 char chooseDirection(int cdist, int rdist, int ldist) {
-  // below "0" is a sensor quirk: continue with previously chosen direction in this case
+  // below or equal "0" is a sensor quirk ...
   if ((cdist <= 0) or (rdist <= 0) or (ldist <= 0)) {
-    return pdir;
+    // ... continue with previously chosen direction before reaching MAX_QUIRKS
+    if (qc < MAX_QUIRKS) {
+      qc++;
+      return pdir;
+    }
+    // ... pull back after reaching MAX_QUIRKS
+    qc = 0;
+    return _BCK;
+  } else {
+    // reset quirk counter if sensor quirk is not the case
+    qc = 0;
   }
 
   // we got stuck: spin left or right ...
