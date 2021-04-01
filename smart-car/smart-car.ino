@@ -108,7 +108,7 @@ char chooseDirection(int cdist, int rdist, int ldist) {
     return pdir;
   }
 
-  // we got stuck STUCK_LOOPS times in a row: spin left or right ...
+  // we got stuck: spin left or right ...
   if ((cdist == pcd) and (rdist == prd) and (ldist == pld)) {
     // ... or just pull back if we already were spinning
     if ((pdir == _SPR) or (pdir == _SPL)) {
