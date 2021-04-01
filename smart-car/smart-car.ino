@@ -22,8 +22,8 @@
 #define RPCT 90
 #define LPCT 100
 
-const byte initSpd = 128; // speed to start on the first loop to gain acceleration
-const byte moveSpd = 64; // speed to continue after first loop passed and we gained initial acceleration
+const byte initSpd = 192; // speed to start on the first loop to gain acceleration
+const byte moveSpd = 96; // speed to continue after first loop passed and we gained initial acceleration
 
 const int turnDist = 40; // distance in cm on which normal turn will be triggered to avoid collision
 const int spinDist = 15; // distance in cm on which obstacle is considered too close and radical spin or pulling back will be triggered
