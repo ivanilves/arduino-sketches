@@ -98,11 +98,6 @@ int lDist() {
 }
 
 char chooseDirection(int cdist, int rdist, int ldist) {
-  // don't keep turning right or left more than one loop step
-  if ((pdir == _RHT) or (pdir == _LFT)) {
-    return _FWD;
-  }
-
   // below "0" is a sensor quirk: continue with previously chosen direction in this case
   if ((cdist <= 0) or (rdist <= 0) or (ldist <= 0)) {
     return pdir;
@@ -138,6 +133,11 @@ char chooseDirection(int cdist, int rdist, int ldist) {
       return _BCK;
     }
     return _SPR;
+  }
+
+  // don't keep turning right or left more than one loop step
+  if ((pdir == _RHT) or (pdir == _LFT)) {
+    return _FWD;
   }
 
   // when obstacle detected: decide to turn left or right
