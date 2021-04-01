@@ -1,5 +1,7 @@
 //#define DEBUG
 
+#define SENSOR_DELAY 33
+
 #define ENA_PIN 10
 #define ENB_PIN 9
 #define IN1_PIN 2
@@ -255,11 +257,11 @@ void stopMovement(int spd) {
 
 void loop() {
   int cd = cDist();
-  delay(33);
+  delay(SENSOR_DELAY);
   int rd = rDist();
-  delay(33);
+  delay(SENSOR_DELAY);
   int ld = lDist();
-  delay(33);
+  delay(SENSOR_DELAY);
 
   char dir = chooseDirection(cd, rd, ld);
   byte spd = getSpeed(dir);
