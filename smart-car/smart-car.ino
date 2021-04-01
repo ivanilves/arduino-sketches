@@ -1,6 +1,6 @@
 //#define DEBUG
 
-#define SENSOR_DELAY 33
+#define SENSOR_DELAY 10
 
 #define ENA_PIN 10
 #define ENB_PIN 9
