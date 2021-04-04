@@ -5,7 +5,7 @@
 #define MAX_QUIRKS 3
 
 #define ENA_PIN 10
-#define ENB_PIN 9
+#define ENB_PIN 11
 #define IN1_PIN 2
 #define IN2_PIN 3
 #define IN3_PIN 5
@@ -25,7 +25,7 @@
 #define LPCT 100
 
 const byte initSpd = 192; // speed to start on the first loop to gain acceleration
-const byte moveSpd = 96; // speed to continue after first loop passed and we gained initial acceleration
+const byte moveSpd = 128; // speed to continue after first loop passed and we gained initial acceleration
 
 const int turnDist = 40; // distance in cm on which normal turn will be triggered to avoid collision
 const int spinDist = 15; // distance in cm on which obstacle is considered too close and radical spin or pulling back will be triggered
