@@ -1,7 +1,11 @@
 //#define DEBUG
 
+#define SENSOR_DELAY 10
+
+#define MAX_QUIRKS 3
+
 #define ENA_PIN 10
-#define ENB_PIN 9
+#define ENB_PIN 11
 #define IN1_PIN 2
 #define IN2_PIN 3
 #define IN3_PIN 5
@@ -20,8 +24,8 @@
 #define RPCT 90
 #define LPCT 100
 
-const byte initSpd = 128; // speed to start on the first loop to gain acceleration
-const byte moveSpd = 64; // speed to continue after first loop passed and we gained initial acceleration
+const byte initSpd = 192; // speed to start on the first loop to gain acceleration
+const byte moveSpd = 128; // speed to continue after first loop passed and we gained initial acceleration
 
 const int turnDist = 40; // distance in cm on which normal turn will be triggered to avoid collision
 const int spinDist = 15; // distance in cm on which obstacle is considered too close and radical spin or pulling back will be triggered
@@ -38,6 +42,9 @@ int pcd;
 int prd;
 int pld;
 char pdir;
+
+// quirk counter - triggers "circuir breaker" on reaching MAX_QUIRKS
+int qc = 0;
 
 void setup() {
 #ifdef DEBUG
@@ -96,17 +103,22 @@ int lDist() {
 }
 
 char chooseDirection(int cdist, int rdist, int ldist) {
-  // don't keep turning right or left more than one loop step
-  if ((pdir == _RHT) or (pdir == _LFT)) {
-    return _FWD;
-  }
-
-  // below "0" is a sensor quirk: continue with previously chosen direction in this case
+  // below or equal "0" is a sensor quirk ...
   if ((cdist <= 0) or (rdist <= 0) or (ldist <= 0)) {
-    return pdir;
+    // ... continue with previously chosen direction before reaching MAX_QUIRKS
+    if (qc < MAX_QUIRKS) {
+      qc++;
+      return pdir;
+    }
+    // ... pull back after reaching MAX_QUIRKS
+    qc = 0;
+    return _BCK;
+  } else {
+    // reset quirk counter if sensor quirk is not the case
+    qc = 0;
   }
 
-  // we got stuck STUCK_LOOPS times in a row: spin left or right ...
+  // we got stuck: spin left or right ...
   if ((cdist == pcd) and (rdist == prd) and (ldist == pld)) {
     // ... or just pull back if we already were spinning
     if ((pdir == _SPR) or (pdir == _SPL)) {
@@ -136,6 +148,11 @@ char chooseDirection(int cdist, int rdist, int ldist) {
       return _BCK;
     }
     return _SPR;
+  }
+
+  // don't keep turning right or left more than one loop step
+  if ((pdir == _RHT) or (pdir == _LFT)) {
+    return _FWD;
   }
 
   // when obstacle detected: decide to turn left or right
@@ -255,11 +272,11 @@ void stopMovement(int spd) {
 
 void loop() {
   int cd = cDist();
-  delay(33);
+  delay(SENSOR_DELAY);
   int rd = rDist();
-  delay(33);
+  delay(SENSOR_DELAY);
   int ld = lDist();
-  delay(33);
+  delay(SENSOR_DELAY);
 
   char dir = chooseDirection(cd, rd, ld);
   byte spd = getSpeed(dir);
