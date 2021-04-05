@@ -1,8 +1,9 @@
-//#define DEBUG
+#define DEBUG
 
-#define SENSOR_DELAY 2
+#define SENSOR_DELAY 10
 
 #define MAX_QUIRKS 3
+#define MAX_TURNS 10
 
 #define ENA_PIN 10
 #define ENB_PIN 11
@@ -46,6 +47,9 @@ char pdir;
 // quirk counter - triggers "circuir breaker" on reaching MAX_QUIRKS
 int qc = 0;
 
+// turns counter - triggers "direction adjustment" on reaching MAX_TURNS
+int tc = 0;
+
 void setup() {
 #ifdef DEBUG
   Serial.begin(9600);
@@ -75,6 +79,7 @@ void debug(char dir, byte spd, int cdist, int rdist, int ldist) {
   Serial.print(" | C: "); Serial.print(cdist);
   Serial.print(" | R: "); Serial.print(rdist);
   Serial.print(" | L: "); Serial.print(ldist);
+  Serial.print(" | TC: "); Serial.print(tc);
   Serial.println("");
 }
 
@@ -173,7 +178,38 @@ char chooseDirection(int cdist, int rdist, int ldist) {
   return _FWD;
 }
 
-int getSpeed(byte dir) {
+char adjustDirection(char dir) {
+  // not moving forward, neither turning currently
+  if (dir != _FWD and dir != _RHT and dir != _LFT) {
+    tc = 0;
+    return dir;
+  }
+
+  // moving forward currently after anything BUT turning
+  if (dir == _FWD and (pdir != _RHT and pdir != _LFT)) {
+    tc = 0;
+    return dir;
+  }
+
+  //  turning currently after anything BUT moving forward or turning
+  if ((dir == _RHT or dir == _LFT) and (pdir != _FWD and pdir != _RHT and pdir != _LFT)) {
+    tc = 0;
+    return dir;
+  }
+
+  tc++;
+
+  // too many turn/forward sequences: pull back!
+  if (tc >= MAX_TURNS) {
+    tc = 0;
+    return _BCK;
+  }
+
+  // by default: preserve direction
+  return dir;
+}
+
+int getSpeed(char dir) {
   if (dir == pdir) {
     return moveSpd;
   }
@@ -279,16 +315,14 @@ void loop() {
   delay(SENSOR_DELAY);
 
   char dir = chooseDirection(cd, rd, ld);
+
+  dir = adjustDirection(dir);
+
   byte spd = getSpeed(dir);
 
 #ifdef DEBUG
   debug(dir, spd, cd, rd, ld);
 #endif
-
-  prd = rd;
-  pcd = cd;
-  pld = ld;
-  pdir = dir;
 
   switch (dir) {
     case _FWD:
@@ -313,4 +347,13 @@ void loop() {
       stopMovement(spd);
       break;
   }
+
+  if (dir == _BCK) {
+    delay(50);
+  }
+
+  prd = rd;
+  pcd = cd;
+  pld = ld;
+  pdir = dir;
 }
