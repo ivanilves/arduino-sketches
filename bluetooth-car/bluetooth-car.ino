@@ -72,19 +72,19 @@ void loop() {
         goForward(_spd);
         break;
       case 'I':
-        goForwardRight(_spd);
+        goForwardLeft(_spd);
         break;
       case 'G':
-        goForwardLeft(_spd);
+        goForwardRight(_spd);
         break;
       case 'B':
         goBackward(_spd);
         break;
       case 'J':
-        goBackwardRight(_spd);
+        goBackwardLeft(_spd);
         break;
       case 'H':
-        goBackwardLeft(_spd);
+        goBackwardRight(_spd);
         break;
       case 'R':
         turnRight(_spd);
