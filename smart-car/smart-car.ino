@@ -1,6 +1,6 @@
 //#define DEBUG
 
-#define SENSOR_DELAY 10
+#define SENSOR_DELAY 2
 
 #define MAX_QUIRKS 3
 
@@ -21,11 +21,11 @@
 #define ECHOL_PIN A4
 #define TRIGL_PIN A5
 
-#define RPCT 90
+#define RPCT 100
 #define LPCT 100
 
-const byte initSpd = 192; // speed to start on the first loop to gain acceleration
-const byte moveSpd = 128; // speed to continue after first loop passed and we gained initial acceleration
+const byte initSpd = 128; // speed to start on the first loop to gain acceleration
+const byte moveSpd = 72; // speed to continue after first loop passed and we gained initial acceleration
 
 const int turnDist = 40; // distance in cm on which normal turn will be triggered to avoid collision
 const int spinDist = 15; // distance in cm on which obstacle is considered too close and radical spin or pulling back will be triggered
