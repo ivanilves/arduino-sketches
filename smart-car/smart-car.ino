@@ -22,8 +22,19 @@
 #define ECHOL_PIN A4
 #define TRIGL_PIN A5
 
-#define RPCT 100
-#define LPCT 100
+#include "local.h"
+
+#ifdef RPCT_OVERRIDE
+const int rPct = RPCT_OVERRIDE;
+#else
+const int rPct = 100;
+#endif
+
+#ifdef LPCT_OVERRIDE
+const int lPct = LPCT_OVERRIDE;
+#else
+const int lPct = 100;
+#endif
 
 const byte initSpd = 128; // speed to start on the first loop to gain acceleration
 const byte moveSpd = 72; // speed to continue after first loop passed and we gained initial acceleration
@@ -53,6 +64,9 @@ int tc = 0;
 void setup() {
 #ifdef DEBUG
   Serial.begin(9600);
+  Serial.println("---");
+  Serial.print("> rPct: "); Serial.print(rPct); Serial.print(" lPct: "); Serial.println(lPct);
+  Serial.println("---");
 #endif
 
   pinMode(ENA_PIN, OUTPUT);
@@ -74,7 +88,7 @@ void setup() {
 }
 
 void debug(char dir, byte spd, int cdist, int rdist, int ldist) {
-  Serial.print(" > "); Serial.print(dir);
+  Serial.print("> "); Serial.print(dir);
   Serial.print(" @ "); Serial.print(spd);
   Serial.print(" | C: "); Serial.print(cdist);
   Serial.print(" | R: "); Serial.print(rdist);
@@ -230,8 +244,8 @@ void goForward(int spd) {
   digitalWrite(IN2_PIN, HIGH);
   digitalWrite(IN3_PIN, LOW);
   digitalWrite(IN4_PIN, HIGH);
-  analogWrite(ENA_PIN, spd * LPCT / 100);
-  analogWrite(ENB_PIN, spd * RPCT / 100);
+  analogWrite(ENA_PIN, spd * lPct / 100);
+  analogWrite(ENB_PIN, spd * rPct / 100);
 
   digitalWrite(LEDR_PIN, LOW);
   digitalWrite(LEDL_PIN, LOW);
