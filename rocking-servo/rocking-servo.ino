@@ -1,39 +1,75 @@
 #include <Servo.h>
 
-#define START 0
-#define STOP 180
+#define START_ANGLE 45
+#define STOP_ANGLE 150
+#define LOOP_DELAY 250
+#define SRV_PIN 9
+#define SPD_PIN A0
 
-#define STEP 5
-#define DELAY 100
+const int startAngle = START_ANGLE;
+const int stopAngle = STOP_ANGLE;
+const int loopDelay = LOOP_DELAY;
+
+const int srvPin = SRV_PIN;
+const int spdPin = SPD_PIN;
+
+const int stepAngle = 10;
 
 Servo srv;
 
 void setup() {
- srv.attach(9);
- srv.write(START);
+  Serial.begin(9600);
+
+  srv.attach(srvPin);
+  srv.write(startAngle);
 }
 
-int pos = START;
+int getSpd() {
+  int a = analogRead(spdPin);
+
+  if (a < 24) {
+    return 0;
+  }
+
+  return ((a - 24) / 100);
+}
+
+int getStepDelay(int spd) {
+  return 100 - 10*spd;
+}
+
+
+int pos = startAngle;
+int spd = 0;
 bool fw = true;
 
+
 void loop() {
+  spd = getSpd();
+
+  if (spd == 0) {
+    srv.write(startAngle);
+    delay(loopDelay);
+    return;
+  }
+
   if (fw) {
-    pos += STEP;
+    pos += stepAngle;
   } else {
-    pos-= STEP;
+    pos -= stepAngle;
   }
 
   srv.write(pos);
 
-  if (pos >= STOP) {
-    delay(200);
+  if (pos >= stopAngle) {
+    delay(loopDelay);
     fw = false;
   } else {
-    if (pos <= START) {
-      delay(200);
+    if (pos <= startAngle) {
+      delay(loopDelay);
       fw = true;
     }
   }
-  
-  delay(DELAY);
+
+  delay(getStepDelay(spd));
 }
