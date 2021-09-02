@@ -1,7 +1,7 @@
 #include <Servo.h>
 
-#define START_ANGLE 45
-#define STOP_ANGLE 150
+#define START_ANGLE 90
+#define STOP_ANGLE 120
 #define LOOP_DELAY 250
 #define SRV_PIN 9
 #define SPD_PIN A0
@@ -13,7 +13,7 @@ const int loopDelay = LOOP_DELAY;
 const int srvPin = SRV_PIN;
 const int spdPin = SPD_PIN;
 
-const int stepAngle = 10;
+const int stepAngle = 1;
 
 Servo srv;
 
@@ -35,14 +35,12 @@ int getSpd() {
 }
 
 int getStepDelay(int spd) {
-  return 100 - 10*spd;
+  return (10 - spd) * 2;
 }
-
 
 int pos = startAngle;
 int spd = 0;
 bool fw = true;
-
 
 void loop() {
   spd = getSpd();
