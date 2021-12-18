@@ -1,11 +1,17 @@
 #define DEBUG
-#define ONOFF_PIN 3
-#define IRSIG_PIN A6
-#define ONOFF_TRH 900
+#define ON_PIN 3
+#define IR_PIN A6
+#define PR_PIN A4
+#define IR_TRH 900
+#define PR_TRH 200
+
+const int graceMillis = 100;
+const int lightMillis = 30000;
 
 void setup() {
-  pinMode(ONOFF_PIN, OUTPUT);
-  pinMode(IRSIG_PIN, INPUT);
+  pinMode(ON_PIN, OUTPUT);
+  pinMode(IR_PIN, INPUT);
+  pinMode(PR_PIN, INPUT);
 
 #ifdef DEBUG
   Serial.begin(9600);
@@ -13,21 +19,25 @@ void setup() {
 }
 
 bool on = false;
-int av;
+int ir, pr;
 unsigned long t = 0;
 
 void loop() {
-  av = analogRead(IRSIG_PIN);
+  ir = analogRead(IR_PIN);
+  pr = analogRead(PR_PIN);
 
 #ifdef DEBUG
-  Serial.println(av);
+  Serial.print("IR: ");
+  Serial.print(ir);
+  Serial.print(" / PR: ");
+  Serial.println(pr);
 #endif
 
-  if (av < ONOFF_TRH) {
+  if ((!on and ir < IR_TRH and pr < PR_TRH) or (on and ir < IR_TRH)) {
     on = !on;
 
-    digitalWrite(ONOFF_PIN, on);
-    delay(500);
+    digitalWrite(ON_PIN, on);
+    delay(5*graceMillis);
 
     if (on) {
       t = millis();
@@ -35,11 +45,11 @@ void loop() {
   }
 
   if (on) {
-    if (millis() - t > 30000) {
-      digitalWrite(ONOFF_PIN, !on);
+    if (millis() - t > lightMillis) {
+      digitalWrite(ON_PIN, !on);
       t = millis();
     }
   }
 
-  delay(50);
+  delay(graceMillis);
 }
