@@ -3,7 +3,7 @@
 #define IR_PIN A6
 #define PR_PIN A4
 #define IR_TRH 900
-#define PR_TRH 200
+#define PR_TRH 50
 
 const int graceMillis = 100;
 const int lightMillis = 30000;
