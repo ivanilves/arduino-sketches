@@ -28,6 +28,10 @@ unsigned long t = 0;
 char _src = '?';
 
 bool irTrig(int ir, int pr, bool on) {
+  if (_src == 'b') {
+    return false;
+  }
+
   if ((!on and ir < IR_TRH and pr < PR_TRH) or (on and ir < IR_TRH)) {
     if (on) {
       _src = '?';
